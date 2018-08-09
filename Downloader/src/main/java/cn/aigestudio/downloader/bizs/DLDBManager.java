@@ -17,7 +17,11 @@ final class DLDBManager implements ITaskDAO, IThreadDAO {
 
     static DLDBManager getInstance(Context context) {
         if (null == sManager) {
-            sManager = new DLDBManager(context);
+            synchronized (DLDBManager.class) {
+                if (null == sManager) {
+                    sManager = new DLDBManager(context);
+                }
+            }
         }
         return sManager;
     }

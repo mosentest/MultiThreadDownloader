@@ -9,6 +9,8 @@ import java.io.RandomAccessFile;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import cn.aigestudio.downloader.utils.HttpsUtils;
+
 import static cn.aigestudio.downloader.bizs.DLCons.Base.DEFAULT_TIMEOUT;
 
 class DLThread implements Runnable {
@@ -32,7 +34,8 @@ class DLThread implements Runnable {
         RandomAccessFile raf = null;
         InputStream is = null;
         try {
-            conn = (HttpURLConnection) new URL(dlInfo.realUrl).openConnection();
+//            conn = (HttpURLConnection) new URL(dlInfo.realUrl).openConnection();
+            conn = HttpsUtils.https(new URL(dlInfo.realUrl));
             conn.setConnectTimeout(DEFAULT_TIMEOUT);
             conn.setReadTimeout(DEFAULT_TIMEOUT);
 

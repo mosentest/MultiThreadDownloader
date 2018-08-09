@@ -14,6 +14,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
 
+import cn.aigestudio.downloader.utils.HttpsUtils;
+
 import static cn.aigestudio.downloader.bizs.DLCons.Base.DEFAULT_TIMEOUT;
 import static cn.aigestudio.downloader.bizs.DLCons.Base.LENGTH_PER_THREAD;
 import static cn.aigestudio.downloader.bizs.DLCons.Base.MAX_REDIRECTS;
@@ -109,7 +111,8 @@ class DLTask implements Runnable, IDLThreadListener {
         while (info.redirect < MAX_REDIRECTS) {
             HttpURLConnection conn = null;
             try {
-                conn = (HttpURLConnection) new URL(info.realUrl).openConnection();
+//                conn = (HttpURLConnection) new URL(info.realUrl).openConnection();
+                conn = HttpsUtils.https(new URL(info.realUrl));
                 conn.setInstanceFollowRedirects(false);
                 conn.setConnectTimeout(DEFAULT_TIMEOUT);
                 conn.setReadTimeout(DEFAULT_TIMEOUT);

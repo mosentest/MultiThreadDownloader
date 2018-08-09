@@ -10,10 +10,25 @@ import static cn.aigestudio.downloader.bizs.DLCons.DBCons.TB_THREAD_SQL_CREATE;
 import static cn.aigestudio.downloader.bizs.DLCons.DBCons.TB_THREAD_SQL_UPGRADE;
 
 final class DLDBHelper extends SQLiteOpenHelper {
-    private static final String DB_NAME = "dl.db";
-    private static final int DB_VERSION = 3;
 
-    DLDBHelper(Context context) {
+    private static final String DB_NAME = DLCons.DB_NAME;
+
+    private static final int DB_VERSION = 1;
+
+    public static DLDBHelper instance;
+
+    public static DLDBHelper getInstance(Context context) {
+        if (instance == null) {
+            synchronized (DLDBHelper.class) {
+                if (instance == null) {
+                    instance = new DLDBHelper(context);
+                }
+            }
+        }
+        return instance;
+    }
+
+    private DLDBHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
 
@@ -29,4 +44,5 @@ final class DLDBHelper extends SQLiteOpenHelper {
         db.execSQL(TB_THREAD_SQL_UPGRADE);
         onCreate(db);
     }
+
 }

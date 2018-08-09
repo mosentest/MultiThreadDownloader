@@ -6,6 +6,9 @@ final class DLCons {
     private DLCons() {
     }
 
+
+    public static final String DB_NAME = "walle_dl.db";
+
     static boolean DEBUG = true;
 
     static final class Base {

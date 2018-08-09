@@ -30,51 +30,51 @@ import static cn.aigestudio.downloader.bizs.DLError.ERROR_REPEAT_URL;
  * 执行具体的下载操作
  *
  * @author AigeStudio 2015-05-09
- *         开始一个下载任务只需调用{@link #dlStart}方法即可
- *         停止某个下载任务需要调用{@link #dlStop}方法 停止下载任务仅仅会将对应下载任务移除下载队列而不删除相应数据 下次启动相同任务时会自动根据上一次停止时保存的数据重新开始下载
- *         取消某个下载任务需要调用{@link #dlCancel}方法 取消下载任务会删除掉相应的本地数据库数据但文件不会被删除
- *         相同url的下载任务视为相同任务
- *         Use {@link #dlStart} for a new download task.
- *         Use {@link #dlStop} to stop a download task base on url.
- *         Use {@link #dlCancel} to cancel a download task base on url.
- *         By the way, the difference between {@link #dlStop} and {@link #dlCancel} is whether the data in database would be deleted or not,
- *         for example, the state of download like local file and data in database will be save when you use {@link #dlStop} stop a download task,
- *         if you use {@link #dlCancel} cancel a download task, anything related to download task would be deleted.
+ * 开始一个下载任务只需调用{@link #dlStart}方法即可
+ * 停止某个下载任务需要调用{@link #dlStop}方法 停止下载任务仅仅会将对应下载任务移除下载队列而不删除相应数据 下次启动相同任务时会自动根据上一次停止时保存的数据重新开始下载
+ * 取消某个下载任务需要调用{@link #dlCancel}方法 取消下载任务会删除掉相应的本地数据库数据但文件不会被删除
+ * 相同url的下载任务视为相同任务
+ * Use {@link #dlStart} for a new download task.
+ * Use {@link #dlStop} to stop a download task base on url.
+ * Use {@link #dlCancel} to cancel a download task base on url.
+ * By the way, the difference between {@link #dlStop} and {@link #dlCancel} is whether the data in database would be deleted or not,
+ * for example, the state of download like local file and data in database will be save when you use {@link #dlStop} stop a download task,
+ * if you use {@link #dlCancel} cancel a download task, anything related to download task would be deleted.
  * @author AigeStudio 2015-05-26
- *         对不支持断点下载的文件直接使用单线程下载 该操作将不会插入数据库
- *         对转向地址进行解析
- *         更改下载线程分配逻辑
- *         DLManager will download with single thread if server does not support break-point, and it will not insert to database
- *         Support url redirection.
- *         Change download thread size dispath.
+ * 对不支持断点下载的文件直接使用单线程下载 该操作将不会插入数据库
+ * 对转向地址进行解析
+ * 更改下载线程分配逻辑
+ * DLManager will download with single thread if server does not support break-point, and it will not insert to database
+ * Support url redirection.
+ * Change download thread size dispath.
  * @author AigeStudio 2015-05-29
- *         修改域名重定向后无法多线程下载问题
- *         修改域名重定向后无法暂停问题
- *         Bugfix:can not start multi-threads to download file when we in url redirection.
- *         Bugfix:can not stop a download task when we in url redirection.
+ * 修改域名重定向后无法多线程下载问题
+ * 修改域名重定向后无法暂停问题
+ * Bugfix:can not start multi-threads to download file when we in url redirection.
+ * Bugfix:can not stop a download task when we in url redirection.
  * @author zhangchi 2015-10-13
- *         Bugfix：修改多次触发任务时的并发问题，防止同时触发多个相同的下载任务；修改任务队列为线程安全模式；
- *         修改多线程任务的线程数量设置机制，每个任务可以自定义设置下载线程数量；通过同构方法dlStart(String url, String dirPath, DLTaskListener listener,int threadNum)；
- *         添加日志开关及日志记录，开关方法为setDebugEnable，日志TAG为DLManager；方便调试;
+ * Bugfix：修改多次触发任务时的并发问题，防止同时触发多个相同的下载任务；修改任务队列为线程安全模式；
+ * 修改多线程任务的线程数量设置机制，每个任务可以自定义设置下载线程数量；通过同构方法dlStart(String url, String dirPath, DLTaskListener listener,int threadNum)；
+ * 添加日志开关及日志记录，开关方法为setDebugEnable，日志TAG为DLManager；方便调试;
  * @author AigeStudio 2015-10-23
- *         修复大部分已知Bug
- *         优化代码逻辑适应更多不同的下载情况
- *         完善错误码机制，使用不同的错误码标识不同错误的发生，详情请参见{@link DLError}
- *         不再判断网络类型只会对是否联网做一个简单的判断
- *         修改{@link #setDebugEnable(boolean)}方法
- *         新增多个不同的{@link #dlStart}方法便于回调
- *         新增{@link #setMaxTask(int)}方法限制多个下载任务的并发数
+ * 修复大部分已知Bug
+ * 优化代码逻辑适应更多不同的下载情况
+ * 完善错误码机制，使用不同的错误码标识不同错误的发生，详情请参见{@link DLError}
+ * 不再判断网络类型只会对是否联网做一个简单的判断
+ * 修改{@link #setDebugEnable(boolean)}方法
+ * 新增多个不同的{@link #dlStart}方法便于回调
+ * 新增{@link #setMaxTask(int)}方法限制多个下载任务的并发数
  * @author AigeStudio 2015-11-05
- *         修复较大文件下载暂停后无法续传问题
- *         修复下载无法取消问题
- *         优化线程分配
- *         优化下载逻辑提升执行效率
+ * 修复较大文件下载暂停后无法续传问题
+ * 修复下载无法取消问题
+ * 优化线程分配
+ * 优化下载逻辑提升执行效率
  * @author AigeStudio 2015-11-27
- *         新增{@link #getDLInfo(String)}方法获取瞬时下载信息
- *         新增{@link #getDLDBManager()}方法获取数据库管理对象
+ * 新增{@link #getDLInfo(String)}方法获取瞬时下载信息
+ * 新增{@link #getDLDBManager()}方法获取数据库管理对象
  * @author AigeStudio 2015-12-16
- *         修复非断点下载情况下无法暂停问题
- *         修复非断点下载情况下载完成后无法获得文件的问题
+ * 修复非断点下载情况下无法暂停问题
+ * 修复非断点下载情况下载完成后无法获得文件的问题
  */
 public final class DLManager {
     private static final String TAG = DLManager.class.getSimpleName();
@@ -109,16 +109,15 @@ public final class DLManager {
     private static final ExecutorService POOL_Thread = new ThreadPoolExecutor(POOL_SIZE * 5,
             POOL_SIZE_MAX * 5, 1, TimeUnit.SECONDS, POOL_QUEUE_THREAD, THREAD_FACTORY);
 
-    private static final ConcurrentHashMap<String, DLInfo> TASK_DLING = new ConcurrentHashMap<>();
-    private static final List<DLInfo> TASK_PREPARE =
-            Collections.synchronizedList(new ArrayList<DLInfo>());
+    private static final ConcurrentHashMap<String, DLInfo> TASK_DLING = new ConcurrentHashMap<>();//这是正在下载的列表
+    private static final List<DLInfo> TASK_PREPARE = Collections.synchronizedList(new ArrayList<DLInfo>());
     private static final ConcurrentHashMap<String, DLInfo> TASK_STOPPED = new ConcurrentHashMap<>();
 
     private static DLManager sManager;
 
     private Context context;
 
-    private int maxTask = 10;
+    private int maxTask = 3;//同时最多三个
 
     private DLManager(Context context) {
         this.context = context;
@@ -126,7 +125,11 @@ public final class DLManager {
 
     public static DLManager getInstance(Context context) {
         if (null == sManager) {
-            sManager = new DLManager(context);
+            synchronized (DLManager.class) {
+                if (null == sManager) {
+                    sManager = new DLManager(context.getApplicationContext());
+                }
+            }
         }
         return sManager;
     }
