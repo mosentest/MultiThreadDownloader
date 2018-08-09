@@ -13,6 +13,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 
 import cn.aigestudio.downloader.utils.HttpsUtils;
 
@@ -28,6 +29,9 @@ import static cn.aigestudio.downloader.bizs.DLCons.Code.HTTP_SEE_OTHER;
 import static cn.aigestudio.downloader.bizs.DLCons.Code.HTTP_TEMP_REDIRECT;
 import static cn.aigestudio.downloader.bizs.DLError.ERROR_OPEN_CONNECT;
 
+/**
+ * 这是下载task
+ */
 class DLTask implements Runnable, IDLThreadListener {
     private static final String TAG = DLTask.class.getSimpleName();
 
@@ -35,13 +39,14 @@ class DLTask implements Runnable, IDLThreadListener {
     private Context context;
 
     private int totalProgress;
-    private int count;
+    private int count;//这是线程数
     private long lastTime = System.currentTimeMillis();
 
     DLTask(Context context, DLInfo info) {
         this.info = info;
         this.context = context;
         this.totalProgress = info.currentBytes;
+        //如果是第一次，isResume就是false
         if (!info.isResume) DLDBManager.getInstance(context).insertTaskInfo(info);
     }
 
@@ -70,7 +75,9 @@ class DLTask implements Runnable, IDLThreadListener {
         DLDBManager.getInstance(context).updateThreadInfo(threadInfo);
         count++;
         if (count >= info.threads.size()) {
-            Log.d(TAG, "All the threads was stopped.");
+            if (DLCons.DEBUG) {
+                Log.d(TAG, "All the threads was stopped.");
+            }
             info.currentBytes = totalProgress;
             DLManager.getInstance(context).addStopTask(info).removeDLTask(info.baseUrl);
             DLDBManager.getInstance(context).updateTaskInfo(info);
@@ -92,9 +99,13 @@ class DLTask implements Runnable, IDLThreadListener {
         }
         info.removeDLThread(threadInfo);
         DLDBManager.getInstance(context).deleteThreadInfo(threadInfo.id);
-        Log.d(TAG, "Thread size " + info.threads.size());
+        if (DLCons.DEBUG) {
+            Log.d(TAG, "Thread size " + info.threads.size());
+        }
         if (info.threads.isEmpty()) {
-            Log.d(TAG, "Task was finished.");
+            if (DLCons.DEBUG) {
+                Log.d(TAG, "Task was finished.");
+            }
             DLManager.getInstance(context).removeDLTask(info.baseUrl);
             DLDBManager.getInstance(context).deleteTaskInfo(info.baseUrl);
             if (info.hasListener) {
@@ -120,7 +131,7 @@ class DLTask implements Runnable, IDLThreadListener {
                 addRequestHeaders(conn);
 
                 final int code = conn.getResponseCode();
-                Log.d("AigeStudio", code+"");
+                Log.d(TAG, code + "");
                 switch (code) {
                     case HTTP_OK:
                     case HTTP_PARTIAL:
@@ -156,13 +167,20 @@ class DLTask implements Runnable, IDLThreadListener {
     }
 
     private void dlInit(HttpURLConnection conn, int code) throws Exception {
+        if (DLCons.DEBUG) {
+            Log.d(TAG, "dlInit");
+        }
         readResponseHeaders(conn);
         DLDBManager.getInstance(context).updateTaskInfo(info);
         if (!DLUtil.createFile(info.dirPath, info.fileName))
             throw new DLException("Can not create file");
         info.file = new File(info.dirPath, info.fileName);
         if (info.file.exists() && info.file.length() == info.totalBytes) {
-            Log.d(TAG, "The file which we want to download was already here.");
+            if (DLCons.DEBUG) {
+                Log.d(TAG, "The file which we want to download was already here.");
+            }
+            //如果存在就回调出吧，别卡在这里吧
+            onFinish(null);
             return;
         }
         if (info.hasListener) info.listener.onStart(info.fileName, info.realUrl, info.totalBytes);
@@ -173,41 +191,56 @@ class DLTask implements Runnable, IDLThreadListener {
             case HTTP_PARTIAL:
                 if (info.totalBytes <= 0) {
                     dlData(conn);
-                    break;
-                }
-                if (info.isResume) {
-                    for (DLThreadInfo threadInfo : info.threads) {
-                        DLManager.getInstance(context)
-                                .addDLThread(new DLThread(threadInfo, info, this));
+                } else {
+                    if (DLCons.DEBUG) {
+                        Log.d(TAG, "info.isResume." + info.isResume);
                     }
-                    break;
+                    //info.isResume true,但是文件不存在了，获取不到文件大小的情况
+                    if (info.isResume) {
+                        for (DLThreadInfo threadInfo : info.threads) {
+                            DLManager.getInstance(context)
+                                    .addDLThread(new DLThread(context, threadInfo, info, this));
+                        }
+                    } else {
+                        dlDispatch();
+                    }
                 }
-                dlDispatch();
                 break;
         }
     }
 
     private void dlDispatch() {
-        int threadSize;
+        int threadSize = 1;
+        //判断是否支持多线程下载文件
+        boolean supportMultiThread = DLManager.getInstance(context).isSupportMultiThread();
         int threadLength = LENGTH_PER_THREAD;
-        if (info.totalBytes <= LENGTH_PER_THREAD) {
-            threadSize = 2;
-            threadLength = info.totalBytes / threadSize;
-        } else {
-            threadSize = info.totalBytes / LENGTH_PER_THREAD;
-        }
-        int remainder = info.totalBytes % threadLength;
-        for (int i = 0; i < threadSize; i++) {
-            int start = i * threadLength;
-            int end = start + threadLength - 1;
-            if (i == threadSize - 1) {
-                end = start + threadLength + remainder - 1;
+        if (supportMultiThread) {//默认不允许多线程下载文件
+            if (info.totalBytes <= LENGTH_PER_THREAD) {
+                threadSize = 2;
+                threadLength = info.totalBytes / threadSize;
+            } else {
+                threadSize = info.totalBytes / LENGTH_PER_THREAD;
             }
-            DLThreadInfo threadInfo =
-                    new DLThreadInfo(UUID.randomUUID().toString(), info.baseUrl, start, end);
+            int remainder = info.totalBytes % threadLength;
+            for (int i = 0; i < threadSize; i++) {
+                int start = i * threadLength;
+                int end = start + threadLength - 1;
+                if (i == threadSize - 1) {
+                    end = start + threadLength + remainder - 1;
+                }
+                DLThreadInfo threadInfo =
+                        new DLThreadInfo(UUID.randomUUID().toString(), info.baseUrl, start, end);
+                info.addDLThread(threadInfo);
+                DLDBManager.getInstance(context).insertThreadInfo(threadInfo);
+                DLManager.getInstance(context).addDLThread(new DLThread(context, threadInfo, info, this));
+            }
+        } else {
+            int start = 0;
+            int end = info.totalBytes;
+            DLThreadInfo threadInfo = new DLThreadInfo(UUID.randomUUID().toString(), info.baseUrl, start, end);
             info.addDLThread(threadInfo);
             DLDBManager.getInstance(context).insertThreadInfo(threadInfo);
-            DLManager.getInstance(context).addDLThread(new DLThread(threadInfo, info, this));
+            DLManager.getInstance(context).addDLThread(new DLThread(context, threadInfo, info, this));
         }
     }
 

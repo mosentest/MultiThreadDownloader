@@ -105,19 +105,21 @@ public final class DLManager {
     };
 
     private static final ExecutorService POOL_TASK = new ThreadPoolExecutor(POOL_SIZE,
-            POOL_SIZE_MAX, 3, TimeUnit.SECONDS, POOL_QUEUE_TASK, TASK_FACTORY);
+            POOL_SIZE_MAX, 3, TimeUnit.SECONDS, POOL_QUEUE_TASK, TASK_FACTORY);//任务的线程池
     private static final ExecutorService POOL_Thread = new ThreadPoolExecutor(POOL_SIZE * 5,
-            POOL_SIZE_MAX * 5, 1, TimeUnit.SECONDS, POOL_QUEUE_THREAD, THREAD_FACTORY);
+            POOL_SIZE_MAX * 5, 1, TimeUnit.SECONDS, POOL_QUEUE_THREAD, THREAD_FACTORY);//多线程执行下载的线程池
 
     private static final ConcurrentHashMap<String, DLInfo> TASK_DLING = new ConcurrentHashMap<>();//这是正在下载的列表
-    private static final List<DLInfo> TASK_PREPARE = Collections.synchronizedList(new ArrayList<DLInfo>());
-    private static final ConcurrentHashMap<String, DLInfo> TASK_STOPPED = new ConcurrentHashMap<>();
+    private static final List<DLInfo> TASK_PREPARE = Collections.synchronizedList(new ArrayList<DLInfo>());//等待队列
+    private static final ConcurrentHashMap<String, DLInfo> TASK_STOPPED = new ConcurrentHashMap<>();//暂停的队列
 
     private static DLManager sManager;
 
     private Context context;
 
     private int maxTask = 3;//同时最多三个
+
+    private boolean isSupportMultiThread = false; //多线程下载同一个包
 
     private DLManager(Context context) {
         this.context = context;
@@ -156,6 +158,20 @@ public final class DLManager {
     public DLManager setDebugEnable(boolean isDebug) {
         DLCons.DEBUG = isDebug;
         return sManager;
+    }
+
+
+    /**
+     * 是否支持多线程下载同一个包，默认false
+     *
+     * @param supportMultiThread
+     */
+    public void setSupportMultiThread(boolean supportMultiThread) {
+        isSupportMultiThread = supportMultiThread;
+    }
+
+    public boolean isSupportMultiThread() {
+        return isSupportMultiThread;
     }
 
     /**
@@ -204,7 +220,7 @@ public final class DLManager {
      * @param listener 下载监听器
      *                 Listener of download task.
      */
-    public void dlStart(String url, String dir, String name, List<DLHeader> headers, IDListener listener) {
+    public synchronized void dlStart(String url, String dir, String name, List<DLHeader> headers, IDListener listener) {
         boolean hasListener = listener != null;
         if (TextUtils.isEmpty(url)) {
             if (hasListener) listener.onError(ERROR_INVALID_URL, "Url can not be null.");
@@ -223,9 +239,13 @@ public final class DLManager {
                 info = TASK_STOPPED.remove(url);
             } else {
                 if (DEBUG) Log.d(TAG, "Resume task from database.");
+                //如果是数据库还存在这个url
                 info = DLDBManager.getInstance(context).queryTaskInfo(url);
                 if (null != info) {
-                    info.threads.clear();
+                    //清除多线程的下载的信息,这里感觉看上去多余，没啥意义
+                    if (info.threads != null) {
+                        info.threads.clear();
+                    }
                     info.threads.addAll(DLDBManager.getInstance(context).queryAllThreadInfo(url));
                 }
             }
@@ -238,9 +258,13 @@ public final class DLManager {
                 info.dirPath = dir;
                 info.fileName = name;
             } else {
+                //修改为isResume true
                 info.isResume = true;
-                for (DLThreadInfo threadInfo : info.threads) {
-                    threadInfo.isStop = false;
+                if (info.threads != null || !info.threads.isEmpty()) {
+                    //修改为isStop false
+                    for (DLThreadInfo threadInfo : info.threads) {
+                        threadInfo.isStop = false;
+                    }
                 }
             }
             info.redirect = 0;

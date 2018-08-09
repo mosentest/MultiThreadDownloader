@@ -13,7 +13,7 @@ final class DLCons {
 
     static final class Base {
         static final int DEFAULT_TIMEOUT = 20000;
-        static final int MAX_REDIRECTS = 5;
+        static final int MAX_REDIRECTS = 3;//重定向的次数
         static final int LENGTH_PER_THREAD = 10485760;
     }
 

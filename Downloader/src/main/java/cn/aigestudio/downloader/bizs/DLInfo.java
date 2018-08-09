@@ -42,6 +42,9 @@ public class DLInfo {
     }
 
     synchronized void removeDLThread(DLThreadInfo info) {
-        threads.remove(info);
+        boolean contains = threads.contains(info);
+        if (contains) {
+            threads.remove(info);
+        }
     }
 }

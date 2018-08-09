@@ -1,5 +1,6 @@
 package cn.aigestudio.downloader.bizs;
 
+import android.content.Context;
 import android.os.Process;
 import android.util.Log;
 
@@ -20,7 +21,10 @@ class DLThread implements Runnable {
     private DLInfo dlInfo;
     private IDLThreadListener listener;
 
-    public DLThread(DLThreadInfo dlThreadInfo, DLInfo dlInfo, IDLThreadListener listener) {
+    private Context context;
+
+    public DLThread(Context context, DLThreadInfo dlThreadInfo, DLInfo dlInfo, IDLThreadListener listener) {
+        this.context = context;
         this.dlThreadInfo = dlThreadInfo;
         this.listener = listener;
         this.dlInfo = dlInfo;
@@ -34,6 +38,19 @@ class DLThread implements Runnable {
         RandomAccessFile raf = null;
         InputStream is = null;
         try {
+            //如果不支持多线程的话
+            boolean supportMultiThread = DLManager.getInstance(context).isSupportMultiThread();
+            if (!supportMultiThread) {
+                if (dlInfo.file.exists() && dlInfo.file.length() == dlInfo.totalBytes) {
+                    if (DLCons.DEBUG) {
+                        Log.d(TAG, "The file which we want to download was already here.");
+                    }
+                    //如果存在就回调出吧，别卡在这里吧
+                    dlThreadInfo.start = dlThreadInfo.end;
+                    listener.onFinish(dlThreadInfo);
+                    return;
+                }
+            }
 //            conn = (HttpURLConnection) new URL(dlInfo.realUrl).openConnection();
             conn = HttpsUtils.https(new URL(dlInfo.realUrl));
             conn.setConnectTimeout(DEFAULT_TIMEOUT);
@@ -62,7 +79,9 @@ class DLThread implements Runnable {
             }
         } catch (IOException e) {
             listener.onStop(dlThreadInfo);
-            e.printStackTrace();
+            if (DLCons.DEBUG) {
+                e.printStackTrace();
+            }
         } finally {
             try {
                 if (null != is) is.close();
