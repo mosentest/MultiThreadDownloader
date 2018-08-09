@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 22
-    buildToolsVersion "22.0.1"
+    compileSdkVersion 27
+
 
     defaultConfig {
         applicationId "cn.aigestudio.downloader.demo"
-        minSdkVersion 4
-        targetSdkVersion 22
+        minSdkVersion 14
+        targetSdkVersion 27
         versionCode 1
         versionName "1.0"
     }
@@ -20,8 +20,8 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile project(':Downloader')
-    compile 'com.android.support:support-v4:22.1.1'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation project(':Downloader')
+    implementation 'com.android.support:appcompat-v7:27.1.1'
 //    compile 'cn.aigestudio.downloader:Downloader:1.4.1'
 }

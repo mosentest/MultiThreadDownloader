@@ -12,11 +12,12 @@ import cn.aigestudio.downloader.interfaces.SimpleDListener;
 
 public class MainActivity extends Activity {
     private static final String[] URLS = {
-            "http://china35.newhua.com/down/FetionNew2015September.zip",
-            "http://download.chinaunix.net/down.php?id=10608&ResourceID=5267&site=1",
-            "http://down.tech.sina.com.cn/download/d_load.php?d_id=49535&down_id=1&ip=42.81.45.159",
-            "http://dlsw.baidu.com/sw-search-sp/soft/7b/33461/freeime.1406862029.exe",
-            "http://113.207.16.84/dd.myapp.com/16891/2E53C25B6BC55D3330AB85A1B7B57485.apk?mkey=5630b43973f537cf&f=cf87&fsname=com.htshuo.htsg_3.0.1_49.apk&asr=02f1&p=.apk"
+            "https://raw.githubusercontent.com/chenupt/DragTopLayout/master/imgs/sample-debug-1.2.1.apk",
+            "http://cdn2.ime.sogou.com/7a5b0274064e2d89f75e3cb4d8269b26/5b46c55e/dl/index/1531213050/sogou_pinyin_90c.exe",
+            "https://www.charlesproxy.com/assets/release/4.2.6/charles-proxy-4.2.6-win64.msi",
+            "http://220.112.193.194/files/7021000006963E3B/dl2.xmind.cn/XMind-ZEN-Update3-for-Windows-64bit.exe",
+            "http://dldir1.qq.com/weixin/Windows/WeChatSetup.exe",
+            "https://www.python.org/ftp/python/2.7.15/python-2.7.15.amd64.msi"
     };
 
     private static final int[] RES_ID_BTN_START = {
@@ -111,7 +112,7 @@ public class MainActivity extends Activity {
             });
         }
 
-        saveDir = Environment.getExternalStorageDirectory() + "/AigeStudio/";
+        saveDir = Environment.getExternalStorageDirectory() + "/moziqi/";
     }
 
     @Override

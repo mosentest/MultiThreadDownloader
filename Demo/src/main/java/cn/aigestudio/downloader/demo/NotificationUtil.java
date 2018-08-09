@@ -11,7 +11,7 @@ import android.os.Environment;
  */
 public final class NotificationUtil {
     public static void notificationForDLAPK(Context context, String url) {
-        notificationForDLAPK(context, url, Environment.getExternalStorageDirectory() + "/AigeStudio/");
+        notificationForDLAPK(context, url, Environment.getExternalStorageDirectory() + "/moziqi/");
     }
 
     public static void notificationForDLAPK(Context context, String url, String path) {
