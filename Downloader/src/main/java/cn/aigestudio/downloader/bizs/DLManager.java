@@ -8,6 +8,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -117,9 +119,11 @@ public final class DLManager {
 
     private Context context;
 
-    private int maxTask = 3;//同时最多三个
+    private int maxTask = 2;//同时最多2个
 
     private boolean isSupportMultiThread = false; //多线程下载同一个包
+
+    private final static long timeout_download = 1 * 60 * 1000L;//1 * 60 * 60 * 1000L
 
     private DLManager(Context context) {
         this.context = context;
@@ -220,7 +224,7 @@ public final class DLManager {
      * @param listener 下载监听器
      *                 Listener of download task.
      */
-    public synchronized void dlStart(String url, String dir, String name, List<DLHeader> headers, IDListener listener) {
+    public void dlStart(String url, String dir, String name, List<DLHeader> headers, IDListener listener) {
         boolean hasListener = listener != null;
         if (TextUtils.isEmpty(url)) {
             if (hasListener) listener.onError(ERROR_INVALID_URL, "Url can not be null.");
@@ -272,13 +276,37 @@ public final class DLManager {
             info.listener = listener;
             info.hasListener = hasListener;
             if (TASK_DLING.size() >= maxTask) {
+                try {
+                    //查看下TASK_DLING是否存在文件下载了1个小时都进度的，有可能是线程挂了
+                    Set<Map.Entry<String, DLInfo>> entries = TASK_DLING.entrySet();
+                    for (Map.Entry<String, DLInfo> temp : entries) {
+                        DLInfo value = temp.getValue();
+                        if (value != null) {
+                            File file = value.file;
+                            if (file != null && file.exists()) {
+                                long time = System.currentTimeMillis() - file.lastModified();
+                                if (DEBUG)
+                                    Log.w(TAG, "Downloading urls is out of range..time.." + time);
+                                if (time > timeout_download) {
+                                    //一个小时还没下载完，就删了吧
+                                    removeDLTask(temp.getKey());
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    if (DEBUG) e.printStackTrace();
+                }
                 if (DEBUG) Log.w(TAG, "Downloading urls is out of range.");
                 TASK_PREPARE.add(info);
             } else {
-                if (DEBUG) Log.d(TAG, "Prepare download from " + info.baseUrl);
-                if (hasListener) listener.onPrepare();
-                TASK_DLING.put(url, info);
-                POOL_TASK.execute(new DLTask(context, info));
+                boolean containsKey = TASK_DLING.containsKey(url);
+                if (!containsKey) {
+                    if (DEBUG) Log.d(TAG, "Prepare download from " + info.baseUrl);
+                    if (hasListener) listener.onPrepare();
+                    TASK_DLING.put(url, info);
+                    POOL_TASK.execute(new DLTask(context, info));
+                }
             }
         }
     }
@@ -341,7 +369,18 @@ public final class DLManager {
 
     synchronized DLManager addDLTask() {
         if (!TASK_PREPARE.isEmpty()) {
-            POOL_TASK.execute(new DLTask(context, TASK_PREPARE.remove(0)));
+            if (TASK_DLING.size() < maxTask) {
+                if (DEBUG) Log.w(TAG, "addDLTask Downloading urls is here");
+                DLInfo remove = TASK_PREPARE.remove(0);
+                boolean containsKey = TASK_DLING.containsKey(remove.baseUrl);
+                if (!containsKey) {//task_dling没有才加进去
+                    if (remove.hasListener) {
+                        remove.listener.onPrepare();
+                    }
+                    TASK_DLING.put(remove.baseUrl, remove);
+                    POOL_TASK.execute(new DLTask(context, remove));
+                }
+            }
         }
         return sManager;
     }

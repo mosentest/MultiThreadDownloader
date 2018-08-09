@@ -7,7 +7,7 @@ final class DLCons {
     }
 
 
-    public static final String DB_NAME = "walle_dl.db";
+    public static final String DB_NAME = "moz1q1_dl.db";
 
     static boolean DEBUG = true;
 

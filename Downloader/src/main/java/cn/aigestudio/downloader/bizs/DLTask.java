@@ -55,7 +55,7 @@ class DLTask implements Runnable, IDLThreadListener {
         totalProgress += progress;
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastTime > 1000) {
-            Log.d(TAG, totalProgress + "");
+            Log.d(TAG, totalProgress + "..info." + info.baseUrl);
             if (info.hasListener) info.listener.onProgress(totalProgress);
             lastTime = currentTime;
         }
@@ -64,12 +64,15 @@ class DLTask implements Runnable, IDLThreadListener {
     @Override
     public synchronized void onStop(DLThreadInfo threadInfo) {
         if (null == threadInfo) {
+            //这是没有线程了的操作的暂停
             DLManager.getInstance(context).removeDLTask(info.baseUrl);
             DLDBManager.getInstance(context).deleteTaskInfo(info.baseUrl);
             if (info.hasListener) {
                 info.listener.onProgress(info.totalBytes);
                 info.listener.onStop(info.totalBytes);
             }
+            //这里同时开启下一个线程的下载
+            DLManager.getInstance(context).addDLTask();
             return;
         }
         DLDBManager.getInstance(context).updateThreadInfo(threadInfo);
@@ -79,10 +82,14 @@ class DLTask implements Runnable, IDLThreadListener {
                 Log.d(TAG, "All the threads was stopped.");
             }
             info.currentBytes = totalProgress;
+            //这里会添加到暂停队列，并且移除下载中队列
             DLManager.getInstance(context).addStopTask(info).removeDLTask(info.baseUrl);
+            //更新下载的信息
             DLDBManager.getInstance(context).updateTaskInfo(info);
             count = 0;
             if (info.hasListener) info.listener.onStop(totalProgress);
+            //这里同时开启下一个线程的下载
+            DLManager.getInstance(context).addDLTask();
         }
     }
 
@@ -95,6 +102,8 @@ class DLTask implements Runnable, IDLThreadListener {
                 info.listener.onProgress(info.totalBytes);
                 info.listener.onFinish(info.file);
             }
+            //这里同时开启下一个线程的下载
+            DLManager.getInstance(context).addDLTask();
             return;
         }
         info.removeDLThread(threadInfo);
@@ -112,6 +121,7 @@ class DLTask implements Runnable, IDLThreadListener {
                 info.listener.onProgress(info.totalBytes);
                 info.listener.onFinish(info.file);
             }
+            //这里同时开启下一个线程的下载
             DLManager.getInstance(context).addDLTask();
         }
     }
@@ -180,6 +190,7 @@ class DLTask implements Runnable, IDLThreadListener {
                 Log.d(TAG, "The file which we want to download was already here.");
             }
             //如果存在就回调出吧，别卡在这里吧
+            onProgress(info.totalBytes);
             onFinish(null);
             return;
         }

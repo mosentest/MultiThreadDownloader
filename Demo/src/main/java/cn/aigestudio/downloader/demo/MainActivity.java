@@ -13,11 +13,11 @@ import cn.aigestudio.downloader.interfaces.SimpleDListener;
 public class MainActivity extends Activity {
     private static final String[] URLS = {
             "https://raw.githubusercontent.com/chenupt/DragTopLayout/master/imgs/sample-debug-1.2.1.apk",
-            "http://cdn2.ime.sogou.com/7a5b0274064e2d89f75e3cb4d8269b26/5b46c55e/dl/index/1531213050/sogou_pinyin_90c.exe",
-            "https://www.charlesproxy.com/assets/release/4.2.6/charles-proxy-4.2.6-win64.msi",
-            "http://220.112.193.194/files/7021000006963E3B/dl2.xmind.cn/XMind-ZEN-Update3-for-Windows-64bit.exe",
-            "http://dldir1.qq.com/weixin/Windows/WeChatSetup.exe",
-            "https://www.python.org/ftp/python/2.7.15/python-2.7.15.amd64.msi"
+            "https://codeload.github.com/gnehsuy/TaoBaoUI/zip/master",
+            "https://codeload.github.com/pinguo-zhouwei/MZBannerView/zip/master",
+            "https://codeload.github.com/lzyzsd/CircleProgress/zip/master",
+            "https://codeload.github.com/txusballesteros/snake/zip/master",
+            "https://codeload.github.com/Frank-Zhu/PullZoomView/zip/master"
     };
 
     private static final int[] RES_ID_BTN_START = {

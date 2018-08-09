@@ -13,27 +13,31 @@ class DLThreadInfo {
         this.end = end;
     }
 
+    /**
+     * 比较线程id和url
+     *
+     * @param o
+     * @return
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
         DLThreadInfo that = (DLThreadInfo) o;
-
-        if (start != that.start) return false;
-        if (end != that.end) return false;
-        if (isStop != that.isStop) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
+        if (id != null ? !id.equals(that.id) : that.id != null) return false; //这是线程id
         return baseUrl != null ? baseUrl.equals(that.baseUrl) : that.baseUrl == null;
     }
 
+    /**
+     * 比较线程id和url
+     *
+     * @return
+     */
     @Override
     public int hashCode() {
         int result = id != null ? id.hashCode() : 0;
         result = 31 * result + (baseUrl != null ? baseUrl.hashCode() : 0);
-        result = 31 * result + start;
-        result = 31 * result + end;
-        result = 31 * result + (isStop ? 1 : 0);
         return result;
     }
 }

@@ -43,11 +43,11 @@ class DLThread implements Runnable {
             if (!supportMultiThread) {
                 if (dlInfo.file.exists() && dlInfo.file.length() == dlInfo.totalBytes) {
                     if (DLCons.DEBUG) {
-                        Log.d(TAG, "The file which we want to download was already here.");
+                        Log.d(TAG, "DLThread.The file which we want to download was already here.");
                     }
                     //如果存在就回调出吧，别卡在这里吧
-                    dlThreadInfo.start = dlThreadInfo.end;
-                    listener.onFinish(dlThreadInfo);
+                    listener.onProgress(dlInfo.totalBytes);
+                    listener.onFinish(null);
                     return;
                 }
             }
