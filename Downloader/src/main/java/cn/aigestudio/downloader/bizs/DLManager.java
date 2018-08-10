@@ -268,7 +268,10 @@ public final class DLManager {
                 info.fileName = name;
             } else {
                 //修改为isResume true
-                info.isResume = true;
+                DLInfo temp = DLDBManager.getInstance(context).queryTaskInfo(url);
+                if (temp != null) {
+                    info.isResume = true;
+                }
                 if (info.threads != null || !info.threads.isEmpty()) {
                     //修改为isStop false
                     for (DLThreadInfo threadInfo : info.threads) {
@@ -291,7 +294,7 @@ public final class DLManager {
                             if (file != null && file.exists()) {
                                 long time = System.currentTimeMillis() - file.lastModified();
                                 if (DEBUG)
-                                    Log.w(TAG, "Downloading urls is out of range..time.." + time);
+                                    Log.w(TAG, "Downloading urls remove.time.." + time);
                                 if (time > timeout_download) {
                                     //一个小时还没下载完，就删了吧
                                     removeDLTask(temp.getKey());
@@ -303,9 +306,13 @@ public final class DLManager {
                     if (DEBUG) e.printStackTrace();
                 }
                 if (DEBUG) Log.w(TAG, "Downloading urls is out of range.");
-                TASK_PREPARE.add(info);
+                boolean contains = TASK_PREPARE.contains(info);
+                if (!contains) {
+                    TASK_PREPARE.add(info);
+                }
             } else {
                 boolean containsKey = TASK_DLING.containsKey(url);
+                if (DEBUG) Log.d(TAG, "Prepare containsKey " + containsKey);
                 if (!containsKey) {
                     if (DEBUG) Log.d(TAG, "Prepare download from " + info.baseUrl);
                     if (hasListener) listener.onPrepare();
@@ -378,9 +385,11 @@ public final class DLManager {
      */
     public synchronized DLManager addDLTask() {
         //没网络的时候不执行任何操作
+        if (DEBUG) Log.d(TAG, "addDLTask");
         if (!DLUtil.isNetworkAvailable(context)) {
             return sManager;
         }
+        if (DEBUG) Log.d(TAG, "nextDLTask.isNetworkAvailable");
         if (!TASK_PREPARE.isEmpty()) { //优先执行等待队列的任务
             if (TASK_DLING.size() < maxTask) {
                 if (DEBUG) Log.w(TAG, "addDLTask TASK_PREPARE .Downloading urls is here");
@@ -400,12 +409,14 @@ public final class DLManager {
     }
 
     private void nextDLTask(DLInfo dlInfo) {
+        if (DEBUG) Log.d(TAG, "nextDLTask");
         if (dlInfo == null) {
             return;
         }
         if (dlInfo.threads != null) {
             dlInfo.threads.clear();
         }
+        if (DEBUG) Log.d(TAG, "nextDLTask  threads");
         dlInfo.threads.addAll(DLDBManager.getInstance(context).queryAllThreadInfo(dlInfo.baseUrl));
         //这里查询数据库，判断是否isResume需要改为true
         DLInfo info = DLDBManager.getInstance(context).queryTaskInfo(dlInfo.baseUrl);
@@ -420,6 +431,7 @@ public final class DLManager {
             }
         }
         boolean containsKey = TASK_DLING.containsKey(dlInfo.baseUrl);
+        if (DEBUG) Log.d(TAG, "nextDLTask  containsKey:" + containsKey);
         if (!containsKey) {//task_dling没有才加进去
             if (dlInfo.hasListener) {
                 dlInfo.listener.onPrepare();

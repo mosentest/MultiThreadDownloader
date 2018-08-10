@@ -47,4 +47,22 @@ public class DLInfo {
             threads.remove(info);
         }
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DLInfo dlInfo = (DLInfo) o;
+
+        if (!baseUrl.equals(dlInfo.baseUrl)) return false;
+        return realUrl.equals(dlInfo.realUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = baseUrl.hashCode();
+        result = 31 * result + realUrl.hashCode();
+        return result;
+    }
 }
