@@ -381,25 +381,28 @@ public final class DLManager {
         if (!DLUtil.isNetworkAvailable(context)) {
             return sManager;
         }
-        if (!TASK_STOPPED.isEmpty()) { //优先执行暂停的任务
-            if (TASK_DLING.size() < maxTask) {
-                if (DEBUG) Log.w(TAG, "addDLTask TASK_STOPPED .Downloading urls is here");
-                DLInfo dlInfo = TASK_STOPPED.remove(0);
-                if (DEBUG) Log.d(TAG, "addDLTask TASK_STOPPED  check form database");
-                nextDLTask(dlInfo);
-            }
-        } else if (!TASK_PREPARE.isEmpty()) { //没有才校验等待队列的任务
+        if (!TASK_PREPARE.isEmpty()) { //优先执行等待队列的任务
             if (TASK_DLING.size() < maxTask) {
                 if (DEBUG) Log.w(TAG, "addDLTask TASK_PREPARE .Downloading urls is here");
                 DLInfo removeDl = TASK_PREPARE.remove(0);
                 if (DEBUG) Log.d(TAG, "addDLTask TASK_STOPPED  check form database");
                 nextDLTask(removeDl);
             }
+        } else if (!TASK_STOPPED.isEmpty()) { //暂停的任务
+            if (TASK_DLING.size() < maxTask) {
+                if (DEBUG) Log.w(TAG, "addDLTask TASK_STOPPED .Downloading urls is here");
+                DLInfo dlInfo = TASK_STOPPED.remove(0);
+                if (DEBUG) Log.d(TAG, "addDLTask TASK_STOPPED  check form database");
+                nextDLTask(dlInfo);
+            }
         }
         return sManager;
     }
 
     private void nextDLTask(DLInfo dlInfo) {
+        if (dlInfo == null) {
+            return;
+        }
         if (dlInfo.threads != null) {
             dlInfo.threads.clear();
         }
