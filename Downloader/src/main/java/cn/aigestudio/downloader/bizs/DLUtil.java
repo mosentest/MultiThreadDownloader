@@ -2,6 +2,7 @@ package cn.aigestudio.downloader.bizs;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
@@ -189,15 +190,55 @@ final class DLUtil {
         return hasFile;
     }
 
+    /**
+     * https://blog.csdn.net/a34927341/article/details/74360447
+     * 检测网络是否连接
+     *
+     * @param context
+     * @return
+     */
     static boolean isNetworkAvailable(Context context) {
         try {
-            ConnectivityManager cm =
-                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            NetworkInfo info = cm.getActiveNetworkInfo();
-            return null != info && info.isConnected();
+            ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                Network[] networks = cm.getAllNetworks();
+                NetworkInfo networkInfo;
+                for (Network mNetwork : networks) {
+                    networkInfo = cm.getNetworkInfo(mNetwork);
+                    if (networkInfo.getState().equals(NetworkInfo.State.CONNECTED)) {
+                        return true;
+                    }
+                }
+            } else {
+                if (cm != null) {
+                    NetworkInfo[] infos = cm.getAllNetworkInfo();
+                    if (infos != null) {
+                        for (NetworkInfo ni : infos) {
+                            if (ni.isConnected()) {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return false;
     }
+
+    /**
+     * 检测wifi是否连接
+     */
+    public static boolean isWifiConnected(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm != null) {
+            NetworkInfo networkInfo = cm.getActiveNetworkInfo();
+            if (networkInfo != null && networkInfo.getType() == ConnectivityManager.TYPE_WIFI) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

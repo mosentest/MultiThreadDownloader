@@ -367,7 +367,15 @@ public final class DLManager {
         return sManager;
     }
 
-    synchronized DLManager addDLTask() {
+    /**
+     * 暴露出来，允许监网络可以下载文件
+     * @return
+     */
+    public synchronized DLManager addDLTask() {
+        //没网络的时候不执行任何操作
+        if (!DLUtil.isNetworkAvailable(context)) {
+            return sManager;
+        }
         if (!TASK_PREPARE.isEmpty()) {
             if (TASK_DLING.size() < maxTask) {
                 if (DEBUG) Log.w(TAG, "addDLTask Downloading urls is here");

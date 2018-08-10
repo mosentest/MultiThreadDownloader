@@ -129,6 +129,9 @@ class DLTask implements Runnable, IDLThreadListener {
     @Override
     public void run() {
         Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
+        if (DLCons.DEBUG) {
+            Log.d(TAG, "start down." + info.baseUrl);
+        }
         while (info.redirect < MAX_REDIRECTS) {
             HttpURLConnection conn = null;
             try {
@@ -141,7 +144,7 @@ class DLTask implements Runnable, IDLThreadListener {
                 addRequestHeaders(conn);
 
                 final int code = conn.getResponseCode();
-                Log.d(TAG, code + "");
+                Log.d(TAG, "netCode:" + code);
                 switch (code) {
                     case HTTP_OK:
                     case HTTP_PARTIAL:
@@ -163,11 +166,20 @@ class DLTask implements Runnable, IDLThreadListener {
                         if (info.hasListener)
                             info.listener.onError(code, conn.getResponseMessage());
                         DLManager.getInstance(context).removeDLTask(info.baseUrl);
+                        if (DLCons.DEBUG) {
+                            Log.d(TAG, "error down." + info.baseUrl);
+                        }
+                        DLManager.getInstance(context).addDLTask();
                         return;
                 }
             } catch (Exception e) {
-                if (info.hasListener) info.listener.onError(ERROR_OPEN_CONNECT, e.toString());
+                if (info.hasListener)
+                    info.listener.onError(ERROR_OPEN_CONNECT, Log.getStackTraceString(e));
                 DLManager.getInstance(context).removeDLTask(info.baseUrl);
+                if (DLCons.DEBUG) {
+                    Log.d(TAG, "error down." + info.baseUrl);
+                }
+                DLManager.getInstance(context).addDLTask();
                 return;
             } finally {
                 if (null != conn) conn.disconnect();
