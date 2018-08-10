@@ -241,6 +241,11 @@ public final class DLManager {
             if (TASK_STOPPED.containsKey(url)) {
                 if (DEBUG) Log.d(TAG, "Resume task from memory.");
                 info = TASK_STOPPED.remove(url);
+                if (DEBUG) Log.d(TAG, "check form database");
+                if (info.threads != null) {
+                    info.threads.clear();
+                }
+                info.threads.addAll(DLDBManager.getInstance(context).queryAllThreadInfo(url));
             } else {
                 if (DEBUG) Log.d(TAG, "Resume task from database.");
                 //如果是数据库还存在这个url
@@ -376,21 +381,49 @@ public final class DLManager {
         if (!DLUtil.isNetworkAvailable(context)) {
             return sManager;
         }
-        if (!TASK_PREPARE.isEmpty()) {
+        if (!TASK_STOPPED.isEmpty()) { //优先执行暂停的任务
             if (TASK_DLING.size() < maxTask) {
-                if (DEBUG) Log.w(TAG, "addDLTask Downloading urls is here");
-                DLInfo remove = TASK_PREPARE.remove(0);
-                boolean containsKey = TASK_DLING.containsKey(remove.baseUrl);
-                if (!containsKey) {//task_dling没有才加进去
-                    if (remove.hasListener) {
-                        remove.listener.onPrepare();
-                    }
-                    TASK_DLING.put(remove.baseUrl, remove);
-                    POOL_TASK.execute(new DLTask(context, remove));
-                }
+                if (DEBUG) Log.w(TAG, "addDLTask TASK_STOPPED .Downloading urls is here");
+                DLInfo dlInfo = TASK_STOPPED.remove(0);
+                if (DEBUG) Log.d(TAG, "addDLTask TASK_STOPPED  check form database");
+                nextDLTask(dlInfo);
+            }
+        } else if (!TASK_PREPARE.isEmpty()) { //没有才校验等待队列的任务
+            if (TASK_DLING.size() < maxTask) {
+                if (DEBUG) Log.w(TAG, "addDLTask TASK_PREPARE .Downloading urls is here");
+                DLInfo removeDl = TASK_PREPARE.remove(0);
+                if (DEBUG) Log.d(TAG, "addDLTask TASK_STOPPED  check form database");
+                nextDLTask(removeDl);
             }
         }
         return sManager;
+    }
+
+    private void nextDLTask(DLInfo dlInfo) {
+        if (dlInfo.threads != null) {
+            dlInfo.threads.clear();
+        }
+        dlInfo.threads.addAll(DLDBManager.getInstance(context).queryAllThreadInfo(dlInfo.baseUrl));
+        //这里查询数据库，判断是否isResume需要改为true
+        DLInfo info = DLDBManager.getInstance(context).queryTaskInfo(dlInfo.baseUrl);
+        //修改为isResume true
+        if (info != null) {
+            dlInfo.isResume = true;
+        }
+        if (dlInfo.threads != null || !dlInfo.threads.isEmpty()) {
+            //修改为isStop false
+            for (DLThreadInfo threadInfo : dlInfo.threads) {
+                threadInfo.isStop = false;
+            }
+        }
+        boolean containsKey = TASK_DLING.containsKey(dlInfo.baseUrl);
+        if (!containsKey) {//task_dling没有才加进去
+            if (dlInfo.hasListener) {
+                dlInfo.listener.onPrepare();
+            }
+            TASK_DLING.put(dlInfo.baseUrl, dlInfo);
+            POOL_TASK.execute(new DLTask(context, dlInfo));
+        }
     }
 
     synchronized DLManager addStopTask(DLInfo info) {

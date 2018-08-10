@@ -25,6 +25,15 @@ class TaskDAO implements ITaskDAO {
 
     @Override
     public void insertTaskInfo(DLInfo info) {
+        DLInfo dlInfo = queryTaskInfo(info.baseUrl);
+        if (dlInfo == null) {
+            preInsertTaskInfo(info);
+        } else {
+            preUpdateTaskInfo(info);
+        }
+    }
+
+    private void preInsertTaskInfo(DLInfo info) {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.getWritableDatabase();
@@ -73,6 +82,15 @@ class TaskDAO implements ITaskDAO {
 
     @Override
     public void updateTaskInfo(DLInfo info) {
+        DLInfo dlInfo = queryTaskInfo(info.baseUrl);
+        if (dlInfo == null) {
+            preInsertTaskInfo(info);
+        } else {
+            preUpdateTaskInfo(info);
+        }
+    }
+
+    private void preUpdateTaskInfo(DLInfo info) {
         SQLiteDatabase db = null;
         try {
             db = dbHelper.getWritableDatabase();
