@@ -3,18 +3,33 @@ package cn.aigestudio.downloader.bizs;
 class DLThreadInfo {
     String id;
     String baseUrl;
-    int start, end;
+    int baseStart;//这是最开始的值，一直不变baseStart
+    int start;
+    int end; //这是下载过程中会变化的start
     boolean isStop;
 
-    DLThreadInfo(String id, String baseUrl, int start, int end) {
+    DLThreadInfo(String id, String baseUrl, int baseStart, int start, int end) {
         this.id = id;
         this.baseUrl = baseUrl;
+        this.baseStart = baseStart;
         this.start = start;
         this.end = end;
     }
 
     /**
      * 比较线程id和url
+     * <p>
+     *     DLInfo.java 这里做比较
+     * synchronized void addDLThread(DLThreadInfo info) {
+     * threads.add(info);
+     * }
+     * <p>
+     * synchronized void removeDLThread(DLThreadInfo info) {
+     * boolean contains = threads.contains(info);
+     * if (contains) {
+     * threads.remove(info);
+     * }
+     * }
      *
      * @param o
      * @return

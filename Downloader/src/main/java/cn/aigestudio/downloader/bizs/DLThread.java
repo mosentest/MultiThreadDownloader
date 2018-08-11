@@ -77,7 +77,7 @@ class DLThread implements Runnable {
                 Log.d(TAG, "Thread " + dlThreadInfo.id + " will be finished.");
                 listener.onFinish(dlThreadInfo);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             listener.onStop(dlThreadInfo);
             if (DLCons.DEBUG) {
                 e.printStackTrace();

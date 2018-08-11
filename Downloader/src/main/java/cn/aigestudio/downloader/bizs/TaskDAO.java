@@ -84,7 +84,7 @@ class TaskDAO implements ITaskDAO {
     public void updateTaskInfo(DLInfo info) {
         DLInfo dlInfo = queryTaskInfo(info.baseUrl);
         if (dlInfo == null) {
-            preInsertTaskInfo(info);
+            //preInsertTaskInfo(info);
         } else {
             preUpdateTaskInfo(info);
         }

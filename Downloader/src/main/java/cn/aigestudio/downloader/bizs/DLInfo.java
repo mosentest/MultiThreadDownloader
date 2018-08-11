@@ -33,6 +33,8 @@ public class DLInfo {
     IDListener listener;
     File file;
 
+    long createTime = System.currentTimeMillis();//表示这个对象创建的时间
+
     DLInfo() {
         threads = new ArrayList<>();
     }
@@ -48,6 +50,17 @@ public class DLInfo {
         }
     }
 
+    /**
+     * DLManager.java 需要比较
+     * if (DEBUG) Log.w(TAG, "Downloading urls is out of range.");
+     * boolean contains = TASK_PREPARE.contains(info);
+     * if (!contains) {
+     * TASK_PREPARE.add(info);
+     * }
+     *
+     * @param o
+     * @return
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

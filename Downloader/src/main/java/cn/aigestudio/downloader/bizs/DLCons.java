@@ -85,6 +85,7 @@ final class DLCons {
 
         static final String TB_THREAD = "thread_info";
         static final String TB_THREAD_URL_BASE = "base_url";
+        static final String TB_THREAD_BASE_START = "base_start";
         static final String TB_THREAD_START = "start";
         static final String TB_THREAD_END = "end";
         static final String TB_THREAD_ID = "id";
@@ -106,6 +107,7 @@ final class DLCons {
                 DLCons.DBCons.TB_THREAD + "(" +
                 BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 DLCons.DBCons.TB_THREAD_URL_BASE + " CHAR, " +
+                DLCons.DBCons.TB_THREAD_BASE_START + " INTEGER, " +
                 DLCons.DBCons.TB_THREAD_START + " INTEGER, " +
                 DLCons.DBCons.TB_THREAD_END + " INTEGER, " +
                 DLCons.DBCons.TB_THREAD_ID + " CHAR)";

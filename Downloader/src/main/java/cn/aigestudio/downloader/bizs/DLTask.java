@@ -220,6 +220,7 @@ class DLTask implements Runnable, IDLThreadListener {
                     }
                     //info.isResume true,但是文件不存在了，获取不到文件大小的情况
                     if (info.isResume) {
+                        //这里可以加逻辑判断如果文件不存在
                         for (DLThreadInfo threadInfo : info.threads) {
                             DLManager.getInstance(context)
                                     .addDLThread(new DLThread(context, threadInfo, info, this));
@@ -252,7 +253,7 @@ class DLTask implements Runnable, IDLThreadListener {
                     end = start + threadLength + remainder - 1;
                 }
                 DLThreadInfo threadInfo =
-                        new DLThreadInfo(UUID.randomUUID().toString(), info.baseUrl, start, end);
+                        new DLThreadInfo(UUID.randomUUID().toString(), info.baseUrl, start, start, end);
                 info.addDLThread(threadInfo);
                 DLDBManager.getInstance(context).insertThreadInfo(threadInfo);
                 DLManager.getInstance(context).addDLThread(new DLThread(context, threadInfo, info, this));
@@ -260,7 +261,7 @@ class DLTask implements Runnable, IDLThreadListener {
         } else {
             int start = 0;
             int end = info.totalBytes;
-            DLThreadInfo threadInfo = new DLThreadInfo(UUID.randomUUID().toString(), info.baseUrl, start, end);
+            DLThreadInfo threadInfo = new DLThreadInfo(UUID.randomUUID().toString(), info.baseUrl, start, start, end);
             info.addDLThread(threadInfo);
             DLDBManager.getInstance(context).insertThreadInfo(threadInfo);
             DLManager.getInstance(context).addDLThread(new DLThread(context, threadInfo, info, this));

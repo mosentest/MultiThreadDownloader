@@ -123,7 +123,16 @@ public final class DLManager {
 
     private boolean isSupportMultiThread = false; //多线程下载同一个包
 
-    private final static long timeout_download = 1 * 60 * 1000L;//1 * 60 * 60 * 1000L
+    private static long timeout_download = 1 * 60 * 1000L;//1 * 60 * 60 * 1000L
+
+    static {
+        boolean debug = DLCons.DEBUG;
+        if (debug) {
+            timeout_download = 1 * 60 * 1000L;
+        } else {
+            timeout_download = 10 * 60 * 1000L;
+        }
+    }
 
     private DLManager(Context context) {
         this.context = context;
@@ -224,7 +233,7 @@ public final class DLManager {
      * @param listener 下载监听器
      *                 Listener of download task.
      */
-    public void dlStart(String url, String dir, String name, List<DLHeader> headers, IDListener listener) {
+    public synchronized void dlStart(String url, String dir, String name, List<DLHeader> headers, IDListener listener) {
         boolean hasListener = listener != null;
         if (TextUtils.isEmpty(url)) {
             if (hasListener) listener.onError(ERROR_INVALID_URL, "Url can not be null.");
@@ -288,16 +297,31 @@ public final class DLManager {
                     //查看下TASK_DLING是否存在文件下载了1个小时都进度的，有可能是线程挂了
                     Set<Map.Entry<String, DLInfo>> entries = TASK_DLING.entrySet();
                     for (Map.Entry<String, DLInfo> temp : entries) {
-                        DLInfo value = temp.getValue();
-                        if (value != null) {
-                            File file = value.file;
+                        String tempKey = temp.getKey();
+                        DLInfo tempValue = temp.getValue();
+                        if (tempValue != null) {
+                            File file = tempValue.file;
                             if (file != null && file.exists()) {
+                                //创建了文件，但是文件一直没有动静
+                                // 考虑是不是线程已经给jvm回收了
                                 long time = System.currentTimeMillis() - file.lastModified();
                                 if (DEBUG)
-                                    Log.w(TAG, "Downloading urls remove.time.." + time);
+                                    Log.w(TAG, "Downloading file exists time.." + time);
                                 if (time > timeout_download) {
                                     //一个小时还没下载完，就删了吧
-                                    removeDLTask(temp.getKey());
+                                    removeDLTask(tempKey);
+                                    //更新下载的信息
+                                    DLDBManager.getInstance(context).updateTaskInfo(tempValue);
+                                }
+                            } else { //这是判断文件没有创建的时候
+                                long time = System.currentTimeMillis() - tempValue.createTime;
+                                if (DEBUG)
+                                    Log.w(TAG, "Downloading file no exists time.." + time);
+                                if (time > timeout_download * 3) {
+                                    //一个小时还没下载完，就删了吧
+                                    removeDLTask(tempKey);
+                                    //更新下载的信息
+                                    DLDBManager.getInstance(context).updateTaskInfo(tempValue);
                                 }
                             }
                         }
@@ -330,7 +354,7 @@ public final class DLManager {
      * @param url 文件下载地址
      *            Download url.
      */
-    public void dlStop(String url) {
+    public synchronized void dlStop(String url) {
         if (TASK_DLING.containsKey(url)) {
             DLInfo info = TASK_DLING.get(url);
             info.isStop = true;
@@ -339,6 +363,9 @@ public final class DLManager {
                     threadInfo.isStop = true;
                 }
             }
+            addStopTask(info).removeDLTask(url);
+            //更新下载的信息
+            DLDBManager.getInstance(context).updateTaskInfo(info);
         }
     }
 
@@ -381,6 +408,7 @@ public final class DLManager {
 
     /**
      * 暴露出来，允许监网络可以下载文件
+     *
      * @return
      */
     public synchronized DLManager addDLTask() {

@@ -10,6 +10,7 @@ import java.util.List;
 import static cn.aigestudio.downloader.bizs.DLCons.DBCons.TB_THREAD;
 import static cn.aigestudio.downloader.bizs.DLCons.DBCons.TB_THREAD_END;
 import static cn.aigestudio.downloader.bizs.DLCons.DBCons.TB_THREAD_ID;
+import static cn.aigestudio.downloader.bizs.DLCons.DBCons.TB_THREAD_BASE_START;
 import static cn.aigestudio.downloader.bizs.DLCons.DBCons.TB_THREAD_START;
 import static cn.aigestudio.downloader.bizs.DLCons.DBCons.TB_THREAD_URL_BASE;
 
@@ -27,10 +28,11 @@ class ThreadDAO implements IThreadDAO {
             db = dbHelper.getWritableDatabase();
             db.execSQL("INSERT INTO " + TB_THREAD + "(" +
                             TB_THREAD_URL_BASE + ", " +
+                            TB_THREAD_BASE_START + ", " +
                             TB_THREAD_START + ", " +
                             TB_THREAD_END + ", " +
-                            TB_THREAD_ID + ") VALUES (?,?,?,?)",
-                    new Object[]{info.baseUrl, info.start, info.end, info.id});
+                            TB_THREAD_ID + ") VALUES (?,?,?,?,?)",
+                    new Object[]{info.baseUrl,info.baseStart, info.start, info.end, info.id});
         } catch (Exception e) {
             if (DLCons.DEBUG) {
                 e.printStackTrace();
@@ -107,6 +109,7 @@ class ThreadDAO implements IThreadDAO {
             db = dbHelper.getWritableDatabase();
             c = db.rawQuery("SELECT " +
                     TB_THREAD_URL_BASE + ", " +
+                    TB_THREAD_BASE_START + ", " +
                     TB_THREAD_START + ", " +
                     TB_THREAD_END + " FROM " +
                     TB_THREAD + " WHERE " +
@@ -115,7 +118,8 @@ class ThreadDAO implements IThreadDAO {
                 info = new DLThreadInfo(id,
                         c.getString(0),
                         c.getInt(1),
-                        c.getInt(2));
+                        c.getInt(2),
+                        c.getInt(3));
         } catch (Exception e) {
             if (DLCons.DEBUG) {
                 e.printStackTrace();
@@ -140,6 +144,7 @@ class ThreadDAO implements IThreadDAO {
             db = dbHelper.getWritableDatabase();
             c = db.rawQuery("SELECT " +
                     TB_THREAD_URL_BASE + ", " +
+                    TB_THREAD_BASE_START + ", " +
                     TB_THREAD_START + ", " +
                     TB_THREAD_END + ", " +
                     TB_THREAD_ID + " FROM " +
@@ -147,10 +152,11 @@ class ThreadDAO implements IThreadDAO {
                     TB_THREAD_URL_BASE + "=?", new String[]{url});
             while (c.moveToNext())
                 info.add(new DLThreadInfo(
-                        c.getString(3),
+                        c.getString(4),
                         c.getString(0),
                         c.getInt(1),
-                        c.getInt(2)));
+                        c.getInt(2),
+                        c.getInt(3)));
         } catch (Exception e) {
             if (DLCons.DEBUG) {
                 e.printStackTrace();
