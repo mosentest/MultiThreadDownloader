@@ -27,6 +27,45 @@
      */
     public void dlStart(String url, String dir, String name, List<DLHeader> headers, IDListener listener)
 ```
+
+```java
+    /**
+     * 设置是否开启Debug模式 默认不开启
+     * Is debug mode, default is true.
+     *
+     * @param isDebug ...
+     * @return ...
+     */
+    public DLManager setDebugEnable(boolean isDebug) {
+        DLCons.DEBUG = isDebug;
+        return sManager;
+    }
+```
+
+```java
+    /**
+     * 是否支持多线程下载同一个包，默认false
+     *
+     * @param supportMultiThread
+     */
+    public void setSupportMultiThread(boolean supportMultiThread) {
+        isSupportMultiThread = supportMultiThread;
+    }
+```
+
+```java
+    /**
+     * 设置并发下载任务最大值
+     * The max task of DLManager.，默认2个
+     *
+     * @param maxTask ...
+     * @return ...
+     */
+    public DLManager setMaxTask(int maxTask) {
+        this.maxTask = maxTask;
+        return sManager;
+    }
+```
 # 注意
 - 本库不会校验文件是否正确，只会比较大小是否一致
 - 下载的时候，会比较拉取服务器的contentLength跟本地文件是否一致，不一致就会重新下载
