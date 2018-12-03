@@ -45,4 +45,11 @@ final class DLDBHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+//        super.onDowngrade(db, oldVersion, newVersion);
+        db.execSQL(TB_TASK_SQL_UPGRADE);
+        db.execSQL(TB_THREAD_SQL_UPGRADE);
+        onCreate(db);
+    }
 }

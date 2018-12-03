@@ -244,6 +244,33 @@ public final class DLManager {
             return;
         }
         if (TASK_DLING.containsKey(url)) {
+            DLInfo dlInfo = TASK_DLING.get(url);
+            if (dlInfo != null) {
+                File file = dlInfo.file;
+                if (file != null && file.exists()) {
+                    //创建了文件，但是文件一直没有动静
+                    // 考虑是不是线程已经给jvm回收了
+                    long time = System.currentTimeMillis() - file.lastModified();
+                    if (DEBUG)
+                        Log.w(TAG, "Downloading file exists time.." + time);
+                    if (time > timeout_download) {
+                        //一个小时还没下载完，就删了吧
+                        removeDLTask(url);
+                        //更新下载的信息
+                        DLDBManager.getInstance(context).updateTaskInfo(url);
+                    }
+                } else { //这是判断文件没有创建的时候
+                    long time = System.currentTimeMillis() - dlInfo.createTime;
+                    if (DEBUG)
+                        Log.w(TAG, "Downloading file no exists time.." + time);
+                    if (time > timeout_download * 3) {
+                        //一个小时还没下载完，就删了吧
+                        removeDLTask(url);
+                        //更新下载的信息
+                        DLDBManager.getInstance(context).updateTaskInfo(url);
+                    }
+                }
+            }
             if (null != listener) listener.onError(ERROR_REPEAT_URL, url + " is downloading.");
         } else {
             DLInfo info;
@@ -297,10 +324,10 @@ public final class DLManager {
                     //查看下TASK_DLING是否存在文件下载了1个小时都进度的，有可能是线程挂了
                     Set<Map.Entry<String, DLInfo>> entries = TASK_DLING.entrySet();
                     for (Map.Entry<String, DLInfo> temp : entries) {
-                        String tempKey = temp.getKey();
-                        DLInfo tempValue = temp.getValue();
-                        if (tempValue != null) {
-                            File file = tempValue.file;
+                        String tempUrl = temp.getKey();
+                        DLInfo dlInfo = temp.getValue();
+                        if (dlInfo != null) {
+                            File file = dlInfo.file;
                             if (file != null && file.exists()) {
                                 //创建了文件，但是文件一直没有动静
                                 // 考虑是不是线程已经给jvm回收了
@@ -309,17 +336,17 @@ public final class DLManager {
                                     Log.w(TAG, "Downloading file exists time.." + time);
                                 if (time > timeout_download) {
                                     //一个小时还没下载完，就删了吧
-                                    removeDLTask(tempKey);
+                                    removeDLTask(tempUrl);
                                     //更新下载的信息
-                                    DLDBManager.getInstance(context).updateTaskInfo(tempValue);
+                                    DLDBManager.getInstance(context).updateTaskInfo(tempUrl);
                                 }
                             } else { //这是判断文件没有创建的时候
-                                long time = System.currentTimeMillis() - tempValue.createTime;
+                                long time = System.currentTimeMillis() - dlInfo.createTime;
                                 if (DEBUG)
                                     Log.w(TAG, "Downloading file no exists time.." + time);
                                 if (time > timeout_download * 3) {
                                     //一个小时还没下载完，就删了吧
-                                    removeDLTask(tempKey);
+                                    removeDLTask(tempUrl);
                                     //更新下载的信息
                                     DLDBManager.getInstance(context).updateTaskInfo(tempValue);
                                 }
