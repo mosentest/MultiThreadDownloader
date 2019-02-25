@@ -85,8 +85,8 @@ public final class DLManager {
     private static final int POOL_SIZE = CORES + 1;
     private static final int POOL_SIZE_MAX = CORES * 2 + 1;
 
-    private static final BlockingQueue<Runnable> POOL_QUEUE_TASK = new LinkedBlockingQueue<>(56);
-    private static final BlockingQueue<Runnable> POOL_QUEUE_THREAD = new LinkedBlockingQueue<>(256);
+    private static final BlockingQueue<Runnable> POOL_QUEUE_TASK = new LinkedBlockingQueue<Runnable>(56);
+    private static final BlockingQueue<Runnable> POOL_QUEUE_THREAD = new LinkedBlockingQueue<Runnable>(256);
 
     private static final ThreadFactory TASK_FACTORY = new ThreadFactory() {
         private final AtomicInteger COUNT = new AtomicInteger(1);
@@ -111,9 +111,9 @@ public final class DLManager {
     private static final ExecutorService POOL_Thread = new ThreadPoolExecutor(POOL_SIZE * 5,
             POOL_SIZE_MAX * 5, 1, TimeUnit.SECONDS, POOL_QUEUE_THREAD, THREAD_FACTORY);//多线程执行下载的线程池
 
-    private static final ConcurrentHashMap<String, DLInfo> TASK_DLING = new ConcurrentHashMap<>();//这是正在下载的列表
+    private static final ConcurrentHashMap<String, DLInfo> TASK_DLING = new ConcurrentHashMap<String, DLInfo>();//这是正在下载的列表
     private static final List<DLInfo> TASK_PREPARE = Collections.synchronizedList(new ArrayList<DLInfo>());//等待队列
-    private static final ConcurrentHashMap<String, DLInfo> TASK_STOPPED = new ConcurrentHashMap<>();//暂停的队列
+    private static final ConcurrentHashMap<String, DLInfo> TASK_STOPPED = new ConcurrentHashMap<String, DLInfo>();//暂停的队列
 
     private static DLManager sManager;
 
@@ -123,14 +123,14 @@ public final class DLManager {
 
     private boolean isSupportMultiThread = false; //多线程下载同一个包
 
-    private static long timeout_download = 1 * 60 * 1000L;//1 * 60 * 60 * 1000L
+    private static long timeout_download;
 
     static {
         boolean debug = DLCons.DEBUG;
         if (debug) {
-            timeout_download = 1 * 60 * 1000L;
+            timeout_download = 5 * 60 * 1000L;
         } else {
-            timeout_download = 10 * 60 * 1000L;
+            timeout_download = 30 * 60 * 1000L;
         }
     }
 
@@ -257,17 +257,17 @@ public final class DLManager {
                         //一个小时还没下载完，就删了吧
                         removeDLTask(url);
                         //更新下载的信息
-                        DLDBManager.getInstance(context).updateTaskInfo(url);
+                        DLDBManager.getInstance(context).deleteTaskInfo(url);
                     }
                 } else { //这是判断文件没有创建的时候
                     long time = System.currentTimeMillis() - dlInfo.createTime;
                     if (DEBUG)
                         Log.w(TAG, "Downloading file no exists time.." + time);
-                    if (time > timeout_download * 3) {
+                    if (time > timeout_download) {
                         //一个小时还没下载完，就删了吧
                         removeDLTask(url);
                         //更新下载的信息
-                        DLDBManager.getInstance(context).updateTaskInfo(url);
+                        //DLDBManager.getInstance(context).deleteTaskInfo(url);
                     }
                 }
             }
@@ -338,17 +338,17 @@ public final class DLManager {
                                     //一个小时还没下载完，就删了吧
                                     removeDLTask(tempUrl);
                                     //更新下载的信息
-                                    DLDBManager.getInstance(context).updateTaskInfo(tempUrl);
+                                    DLDBManager.getInstance(context).deleteTaskInfo(tempUrl);
                                 }
                             } else { //这是判断文件没有创建的时候
                                 long time = System.currentTimeMillis() - dlInfo.createTime;
                                 if (DEBUG)
                                     Log.w(TAG, "Downloading file no exists time.." + time);
-                                if (time > timeout_download * 3) {
+                                if (time > timeout_download) {
                                     //一个小时还没下载完，就删了吧
                                     removeDLTask(tempUrl);
                                     //更新下载的信息
-                                    DLDBManager.getInstance(context).updateTaskInfo(tempValue);
+                                    //DLDBManager.getInstance(context).deleteTaskInfo(tempUrl);
                                 }
                             }
                         }

@@ -55,7 +55,9 @@ class DLTask implements Runnable, IDLThreadListener {
         totalProgress += progress;
         long currentTime = System.currentTimeMillis();
         if (currentTime - lastTime > 1000) {
-            Log.d(TAG, totalProgress + "..info." + info.baseUrl);
+            if (DLCons.DEBUG) {
+                Log.d(TAG, totalProgress + "..info." + info.baseUrl);
+            }
             if (info.hasListener) info.listener.onProgress(totalProgress);
             lastTime = currentTime;
         }
@@ -144,7 +146,9 @@ class DLTask implements Runnable, IDLThreadListener {
                 addRequestHeaders(conn);
 
                 final int code = conn.getResponseCode();
-                Log.d(TAG, "netCode:" + code);
+                if (DLCons.DEBUG) {
+                    Log.d(TAG, "netCode:" + code);
+                }
                 switch (code) {
                     case HTTP_OK:
                     case HTTP_PARTIAL:

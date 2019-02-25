@@ -64,7 +64,7 @@ final class DLUtil {
 
     static List<DLHeader> initRequestHeaders(List<DLHeader> headers, DLInfo info) {
         if (null == headers || headers.isEmpty()) {
-            headers = new ArrayList<>();
+            headers = new ArrayList<DLHeader>();
             headers.add(new DLHeader("Accept", "image/gif, image/jpeg, image/pjpeg, image/pjpeg," +
                     "application/x-shockwave-flash, application/xaml+xml," +
                     "application/vnd.ms-xpsdocument, application/x-ms-xbap," +

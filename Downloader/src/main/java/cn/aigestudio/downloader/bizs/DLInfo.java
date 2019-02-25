@@ -36,7 +36,7 @@ public class DLInfo {
     long createTime = System.currentTimeMillis();//表示这个对象创建的时间
 
     DLInfo() {
-        threads = new ArrayList<>();
+        threads = new ArrayList<DLThreadInfo>();
     }
 
     synchronized void addDLThread(DLThreadInfo info) {

@@ -2,17 +2,17 @@ package cn.aigestudio.downloader.bizs;
 
 import android.provider.BaseColumns;
 
-final class DLCons {
+public class DLCons {
     private DLCons() {
     }
 
 
-    public static final String DB_NAME = "moz1q1_dl.db";
+    public static String DB_NAME = "dl_download.db";
 
-    static boolean DEBUG = true;
+    public static boolean DEBUG = true;
 
     static final class Base {
-        static final int DEFAULT_TIMEOUT = 20000;
+        static final int DEFAULT_TIMEOUT = 45 * 1000;
         static final int MAX_REDIRECTS = 3;//重定向的次数
         static final int LENGTH_PER_THREAD = 10485760;
     }
