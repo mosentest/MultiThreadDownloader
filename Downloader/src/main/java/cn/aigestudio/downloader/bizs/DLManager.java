@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -106,10 +108,14 @@ public final class DLManager {
         }
     };
 
-    private static final ExecutorService POOL_TASK = new ThreadPoolExecutor(POOL_SIZE,
-            POOL_SIZE_MAX, 3, TimeUnit.SECONDS, POOL_QUEUE_TASK, TASK_FACTORY);//任务的线程池
-    private static final ExecutorService POOL_Thread = new ThreadPoolExecutor(POOL_SIZE * 5,
-            POOL_SIZE_MAX * 5, 1, TimeUnit.SECONDS, POOL_QUEUE_THREAD, THREAD_FACTORY);//多线程执行下载的线程池
+//    private static final ExecutorService POOL_TASK = new ThreadPoolExecutor(POOL_SIZE,
+//            POOL_SIZE_MAX, 3, TimeUnit.SECONDS, POOL_QUEUE_TASK, TASK_FACTORY);//任务的线程池
+//    private static final ExecutorService POOL_Thread = new ThreadPoolExecutor(POOL_SIZE * 5,
+//            POOL_SIZE_MAX * 5, 1, TimeUnit.SECONDS, POOL_QUEUE_THREAD, THREAD_FACTORY);//多线程执行下载的线程池
+
+    private static final ExecutorService POOL_TASK = Executors.newCachedThreadPool();//任务的线程池
+    private static final ExecutorService POOL_Thread = Executors.newCachedThreadPool();//多线程执行下载的线程池
+
 
     private static final ConcurrentHashMap<String, DLInfo> TASK_DLING = new ConcurrentHashMap<String, DLInfo>();//这是正在下载的列表
     private static final List<DLInfo> TASK_PREPARE = Collections.synchronizedList(new ArrayList<DLInfo>());//等待队列
